@@ -8,5 +8,6 @@ class AbstractItem(Item):
     abstract = Field()
     
 class ReportItem(Item):
-    file_urls = Field()
-    files = Field()
+    url = Field()
+    date = Field()
+    data = Field()

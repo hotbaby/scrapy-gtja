@@ -1,22 +1,19 @@
 
 # -*- coding: UTF-8 -*-
 
-import time
+import datetime
 import hashlib
+from urllib import unquote
 
 from scrapy import log
-#from scrapy.contrib.spiders  import CrawlSpider, Rule
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from scrapy.linkextractors import LinkExtractor
 from scrapy.selector import HtmlXPathSelector
 from scrapy.http import Request, FormRequest
 from scrapy.conf import settings
 from scrapy.utils.spider import iterate_spider_output
-
-from gtja.items import AbstractItem, ReportItem
-from _cffi_backend import callback
 from scrapy.spiders import Spider
-from distutils.log import Log
+
+from gtja.items import AbstractItem
 
 class Rule(object):
     
@@ -31,21 +28,31 @@ class GtjaSpider(Spider):
     name = "gtja"
     allowed_domains = ["gtja.com"]
     start_urls = [
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=8", #Strategy research
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=7", #Bond research
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=6", #Financial engineering
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=5", #Company research
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=4", #Industry research
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=3", #Macro research
+        #Strategy research
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=8&keyWord=",
         
-        #"http://www.gtja.com/fyInfo/uplusReportsList.jsp?catType=1", #Latest report
+        #Bond research
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=7&keyWord=",
+        
+        #Financial engineering
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=6&keyWord=",
+        
+        #Company research
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=5&keyWord=",
+
+        #Industry research
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=4&keyWord=",
+        
+        #Macro research
+        #"http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=3&keyWord=",
+        
+        #Latest report
         "http://www.gtja.com/fyInfo/uplusReportsListInner.jsp?catType=1&keyWord=",
     ]
 
     rules = [
-        Rule(LinkExtractor(allow=[r"/fyInfo/contentForJunhong\.jsp"]), callback="parse_abstract", follow=False), # report abstract
-        #Rule(LinkExtractor(allow=[r"/share/commons/ShowNotesDocumentFile\.jsp"]), callback="download_report"), #TODO apped download url to the list
-        #TODO next page
+        Rule(LinkExtractor(allow=[r"/fyInfo/contentForJunhong\.jsp"]), callback="parse_abstract", follow=True), #Report abstract
+        Rule(LinkExtractor(allow=[r"/share/commons/ShowNotesDocumentFile\.jsp"]), callback="download_report"), #Report file
     ]
     
     suspend_request = []
@@ -120,7 +127,7 @@ class GtjaSpider(Spider):
             request = FormRequest(
                 url=DOMAIN + REPORT_LIST_URL,
                 formdata={"catType":str(catType), "keyWord":str(keyWord), "current_page":str(current_page+1), "rows":str(rows), "pages":str(pages)},
-                callback=self.parse, #TODO
+                callback=self.parse,
                 )
             self.suspend_request.append(request)
         else:
@@ -136,17 +143,27 @@ class GtjaSpider(Spider):
         title = hxs.select("//td[@class='f20blue tdc']/text()").extract()[0]
         date = hxs.select("//div[@class='f_black f_14']/text()").extract()[0]
         abstract = hxs.select("//table[@class='f_black f_14']//td").extract()[0]
-        #TODO regular matching the abstract content
         
         item["url"] = url
         item["title"] = title
-        item["date"] = date #TODO
+        item["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
         item["abstract"] = abstract
         return item
-    
+
     def download_report(self, response):
         """ Download the report pdf. """
+        def get_filename_from_url(url):
+            #http://www.gtja.com/f//lotus/201510/20151023%20Company%20Report%2001816%20HK_addStamper_addEncrypt.pdf
+            import re
+            pattern = re.compile("http://www.gtja.com/f//lotus/(\d+)/(.*)")
+            result = pattern.match(url)
+            if result is None:
+                return str(datetime.date.today()), hashlib.md5(url).hexdigest() + ".pdf"
+            else:
+                #return str(datetime.date.today()), hashlib.md5(url).hexdigest() + ".pdf"
+                return result.group(1), unquote(result.group(2))
         
-        filename = settings["FILES_STORE_PATH"] + hashlib.md5(response.url).hexdigest() + ".pdf"
-        with open(filename, "wb") as file: #TODO what is the diffenrence between "w+" and "wb"
-            file.write(response.body)
+        date, file = get_filename_from_url(response.url) #TODO Create date directory.
+        filename = settings["FILES_STORE_PATH"] + file
+        with open(filename.decode("utf-8"), "wb") as f: #TODO what is the diffenrence between "w+" and "wb"
+            f.write(response.body)
