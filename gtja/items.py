@@ -1,13 +1,15 @@
 
 from scrapy.item import Item, Field
 
-class AbstractItem(Item):
+class ReportAbstractItem(Item):
     url = Field()
     title = Field()
     date = Field()
     abstract = Field()
+    link = Field()
     
-class ReportItem(Item):
+class ReportFileItem(Item):
     url = Field()
     date = Field()
-    data = Field()
+    path = Field()
+    link = Field()

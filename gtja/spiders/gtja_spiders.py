@@ -14,7 +14,8 @@ from scrapy.conf import settings
 from scrapy.utils.spider import iterate_spider_output
 from scrapy.spiders import Spider
 
-from gtja.items import AbstractItem
+from gtja.items import ReportAbstractItem, ReportFileItem
+from distutils.log import Log
 
 class Rule(object):
     
@@ -91,7 +92,7 @@ class GtjaSpider(Spider):
             for i, rule in enumerate(self.rules):
                 for link in rule.link_extractor.extract_links(response): 
                     request = Request(url=link.url, callback=self.response_download)
-                    request.meta.update(rule=i, link_text=link.text)
+                    request.meta.update(rule=i, link_text=link.text, link_url=link.url)
                     self.suspend_request.append(request)
         else:
             pass
@@ -138,17 +139,20 @@ class GtjaSpider(Spider):
         """ Extract data from html. """
 
         hxs = HtmlXPathSelector(response)
-        item = AbstractItem()
+        item = ReportAbstractItem()
 
         url = response.url
         title = hxs.select("//td[@class='f20blue tdc']/text()").extract()[0]
         date = hxs.select("//div[@class='f_black f_14']/text()").extract()[0]
         abstract = hxs.select("//table[@class='f_black f_14']//td").extract()[0]
+        link = hxs.select("//a[contains(@href,'ShowNotesDocumentFile')]/@href").extract()[0]
+        link = "http://www.gtja.com" + link
         
         item["url"] = url
         item["title"] = title
         item["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
         item["abstract"] = abstract
+        item["link"] = link
         return item
 
     def download_report(self, response):
@@ -173,3 +177,11 @@ class GtjaSpider(Spider):
         filename = file_path + name
         with open(filename.decode("utf-8"), "wb") as f: #TODO what is the diffenrence between "w+" and "wb"
             f.write(response.body)
+            
+        item = ReportFileItem()
+        item["url"] = unquote(response.url)
+        item["date"] =  date
+        item["path"] =  "/" + date + "/" + name #Relative path
+        item["link"] = response.meta["link_url"]
+        return item
+

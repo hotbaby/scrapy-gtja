@@ -8,7 +8,8 @@ USER_AGENT = "%s/%s" % (BOT_NAME, BOT_VERSION)
 
 
 ITEM_PIPELINES = {
-    "gtja.pipelines.MongoDBStorage": 1,
+    "gtja.pipelines.MongoDBAbstractStorage": 1,
+    "gtja.pipelines.MongoDBFileStorage": 2,
 }
 
 FILES_STORE_PATH = r"G:/data/gtja/report/"
@@ -17,7 +18,8 @@ FILES_STORE_PATH = r"G:/data/gtja/report/"
 MONGODB_SERVER = "192.168.199.167"
 MONGODB_PORT = 27017
 MONGODB_DB = "gtja"
-MONGODB_COLLECTION = "report"
+MONGODB_COLLECTION_REPORT_ABSTRACT = "report_abstract"
+MONGODB_COLLECTION_REPORT_FILE = "report_file"
 
 
 COOKIE = {
