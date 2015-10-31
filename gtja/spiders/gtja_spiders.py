@@ -15,7 +15,6 @@ from scrapy.utils.spider import iterate_spider_output
 from scrapy.spiders import Spider
 
 from gtja.items import ReportAbstractItem, ReportFileItem
-from distutils.log import Log
 
 class Rule(object):
     
