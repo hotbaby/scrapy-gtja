@@ -11,7 +11,7 @@ ITEM_PIPELINES = {
     "gtja.pipelines.MongoDBStorage": 1,
 }
 
-FILES_STORE_PATH = r"G:\data\gtja\report\\"
+FILES_STORE_PATH = r"G:/data/gtja/report/"
 
 
 MONGODB_SERVER = "192.168.199.167"

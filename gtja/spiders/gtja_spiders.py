@@ -1,6 +1,7 @@
 
 # -*- coding: UTF-8 -*-
 
+import os
 import datetime
 import hashlib
 from urllib import unquote
@@ -163,7 +164,12 @@ class GtjaSpider(Spider):
                 #return str(datetime.date.today()), hashlib.md5(url).hexdigest() + ".pdf"
                 return result.group(1), unquote(result.group(2))
         
-        date, file = get_filename_from_url(response.url) #TODO Create date directory.
-        filename = settings["FILES_STORE_PATH"] + file
+        date, name = get_filename_from_url(response.url) #TODO Create date directory.
+
+        file_path = settings["FILES_STORE_PATH"] + date + "/"
+        if os.path.exists(file_path) != True:
+            os.mkdir(file_path)
+
+        filename = file_path + name
         with open(filename.decode("utf-8"), "wb") as f: #TODO what is the diffenrence between "w+" and "wb"
             f.write(response.body)
