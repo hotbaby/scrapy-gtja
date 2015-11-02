@@ -5,6 +5,7 @@ import os
 import datetime
 import hashlib
 from urllib import unquote
+from pymongo import Connection
 
 from scrapy import log
 from scrapy.linkextractors import LinkExtractor
@@ -15,6 +16,7 @@ from scrapy.utils.spider import iterate_spider_output
 from scrapy.spiders import Spider
 
 from gtja.items import ReportAbstractItem, ReportFileItem
+from bson import is_valid
 
 class Rule(object):
     
@@ -61,7 +63,13 @@ class GtjaSpider(Spider):
     def __init__(self, *args, **kwargs):
         super(GtjaSpider, self).__init__(*args, **kwargs)
         self.compile_rules()
-    
+        self.connect_db()
+        
+    def connect_db(self):
+        connection = Connection(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
+        db = connection[settings["MONGODB_DB"]]
+        self.collection_visited = db[settings["MONGODB_COLLECTION_REPORT_VISITED"]]
+        
     def compile_rules(self):
         def get_method(method):
             if callable(method):
@@ -134,8 +142,25 @@ class GtjaSpider(Spider):
         else:
             pass
 
+    def is_visited(self, url):
+        url = unquote(url)
+        item = self.collection_visited.find_one({"url": url})
+        return True if item is not None else False
+    
+    def visit(self, url):
+        url = unquote(url)
+        item = {
+            "url": url,
+            "date": datetime.datetime.now(),
+        }
+        self.collection_visited.insert(item)
+
     def parse_abstract(self, response):
         """ Extract data from html. """
+
+        if self.is_visited(response.url) == True:
+            return None
+        self.visit(response.url)
 
         hxs = HtmlXPathSelector(response)
         item = ReportAbstractItem()
@@ -147,7 +172,7 @@ class GtjaSpider(Spider):
         link = hxs.select("//a[contains(@href,'ShowNotesDocumentFile')]/@href").extract()[0]
         link = "http://www.gtja.com" + link
         
-        item["url"] = url
+        item["url"] = unquote(response.url)
         item["title"] = title
         item["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
         item["abstract"] = abstract
@@ -156,6 +181,11 @@ class GtjaSpider(Spider):
 
     def download_report(self, response):
         """ Download the report pdf. """
+        
+        if self.is_visited(response.url) == True:
+            return None
+        self.visit(response.url)
+
         def get_filename_from_url(url):
             #http://www.gtja.com/f//lotus/201510/20151023%20Company%20Report%2001816%20HK_addStamper_addEncrypt.pdf
             import re
@@ -182,5 +212,6 @@ class GtjaSpider(Spider):
         item["date"] =  date
         item["path"] =  "/" + date + "/" + name #Relative path
         item["link"] = response.meta["link_url"]
+        
         return item
 
