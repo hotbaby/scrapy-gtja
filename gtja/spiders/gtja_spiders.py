@@ -98,6 +98,8 @@ class GtjaSpider(Spider):
         if follow is True:
             for i, rule in enumerate(self.rules):
                 for link in rule.link_extractor.extract_links(response): 
+                    if self.is_visited(link.url) == True:
+                        continue
                     request = Request(url=link.url, callback=self.response_download)
                     request.meta.update(rule=i, link_text=link.text, link_url=link.url)
                     self.suspend_request.append(request)
@@ -132,7 +134,8 @@ class GtjaSpider(Spider):
         current_page = int(current_page)
         pages = int(pages)
         if current_page < pages:
-            current_page = current_page + 1
+        #if current_page < 8:
+            current_page = current_page
             request = FormRequest(
                 url=DOMAIN + REPORT_LIST_URL,
                 formdata={"catType":str(catType), "keyWord":str(keyWord), "current_page":str(current_page+1), "rows":str(rows), "pages":str(pages)},
