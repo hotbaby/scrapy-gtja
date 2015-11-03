@@ -163,7 +163,7 @@ class GtjaSpider(Spider):
 
         if self.is_visited(response.url) == True:
             return None
-        self.visit(response.url)
+      
 
         hxs = HtmlXPathSelector(response)
         item = ReportAbstractItem()
@@ -180,6 +180,9 @@ class GtjaSpider(Spider):
         item["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
         item["abstract"] = abstract
         item["link"] = link
+        
+        self.visit(response.url)
+
         return item
 
     def download_report(self, response):
@@ -187,7 +190,7 @@ class GtjaSpider(Spider):
         
         if self.is_visited(response.url) == True:
             return None
-        self.visit(response.url)
+        
 
         def get_filename_from_url(url):
             #http://www.gtja.com/f//lotus/201510/20151023%20Company%20Report%2001816%20HK_addStamper_addEncrypt.pdf
@@ -215,6 +218,8 @@ class GtjaSpider(Spider):
         item["date"] =  date
         item["path"] =  "/" + date + "/" + name #Relative path
         item["link"] = response.meta["link_url"]
+        
+        self.visit(response.url)
         
         return item
 
