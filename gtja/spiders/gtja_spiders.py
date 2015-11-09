@@ -59,6 +59,7 @@ class GtjaSpider(Spider):
     ]
     
     suspend_request = []
+    expired = False
 
     def __init__(self, *args, **kwargs):
         super(GtjaSpider, self).__init__(*args, **kwargs)
@@ -118,9 +119,14 @@ class GtjaSpider(Spider):
     def add_next_operation(self, response):
         """ Parse page info from html. """
 
+        #Add next page request to suspended request list only if the current page is the list page.
         DOMAIN = "http://www.gtja.com"
         REPORT_LIST_URL = "/fyInfo/uplusReportsListInner.jsp" 
         if response.url.find(REPORT_LIST_URL) == -1:
+            return
+        
+        #Add next page request to suspended rerquest only if the report is not expire.
+        if self.expired == True:
             return
         
         hxs = HtmlXPathSelector(response)
@@ -182,6 +188,13 @@ class GtjaSpider(Spider):
         item["link"] = link
         item["create_date"] = datetime.datetime.now()
         
+        time_delta = datetime.datetime.now() - item["date"]
+        if settings["EXPIRE_DAYS"] and time_delta.days >= settings["EXPIRE_DAYS"]:
+            self.expired = True
+            
+        if self.expired == True:
+            return
+        
         self.visit(response.url)
 
         return item
@@ -192,7 +205,6 @@ class GtjaSpider(Spider):
         if self.is_visited(response.url) == True:
             return None
         
-
         def get_filename_from_url(url):
             #http://www.gtja.com/f//lotus/201510/20151023%20Company%20Report%2001816%20HK_addStamper_addEncrypt.pdf
             import re
