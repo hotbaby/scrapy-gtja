@@ -180,6 +180,7 @@ class GtjaSpider(Spider):
         item["date"] = datetime.datetime.strptime(date, "%Y-%m-%d")
         item["abstract"] = abstract
         item["link"] = link
+        item["create_date"] = datetime.datetime.now()
         
         self.visit(response.url)
 
@@ -218,6 +219,7 @@ class GtjaSpider(Spider):
         item["date"] =  date
         item["path"] =  "/" + date + "/" + name #Relative path
         item["link"] = response.meta["link_url"]
+        item["create_date"] = datetime.datetime.now()
         
         self.visit(response.url)
         
