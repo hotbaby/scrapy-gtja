@@ -12,7 +12,8 @@ ITEM_PIPELINES = {
     "gtja.pipelines.MongoDBFileStorage": 2,
 }
 
-FILES_STORE_PATH = r"G:/data/gtja/report/"
+#FILES_STORE_PATH = r"G:/data/gtja/report/"
+FILES_STORE_PATH = r"/home/yy/Share/data/gtja/report"
 
 
 MONGODB_SERVER = "192.168.1.9"
@@ -22,7 +23,7 @@ MONGODB_COLLECTION_REPORT_ABSTRACT = "report_abstract"
 MONGODB_COLLECTION_REPORT_FILE = "report_file"
 MONGODB_COLLECTION_REPORT_VISITED = "report_visited"
 
-EXPIRE_DAYS = 2
+EXPIRE_DAYS = 5
 
 COOKIE = {
     "nc":2,
