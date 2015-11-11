@@ -5,7 +5,7 @@ import os
 import datetime
 import hashlib
 from urllib import unquote
-from pymongo import Connection
+from pymongo import MongoClient
 
 from scrapy import log
 from scrapy.linkextractors import LinkExtractor
@@ -16,7 +16,6 @@ from scrapy.utils.spider import iterate_spider_output
 from scrapy.spiders import Spider
 
 from gtja.items import ReportAbstractItem, ReportFileItem
-from bson import is_valid
 
 class Rule(object):
     
@@ -67,7 +66,7 @@ class GtjaSpider(Spider):
         self.connect_db()
         
     def connect_db(self):
-        connection = Connection(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
+        connection = MongoClient(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
         db = connection[settings["MONGODB_DB"]]
         self.collection_visited = db[settings["MONGODB_COLLECTION_REPORT_VISITED"]]
         

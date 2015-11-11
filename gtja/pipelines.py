@@ -1,5 +1,5 @@
 
-from pymongo import Connection
+from pymongo import MongoClient
 
 from scrapy.conf import settings
 from scrapy.exceptions import DropItem
@@ -9,7 +9,7 @@ from gtja.items import ReportAbstractItem, ReportFileItem
 class MongoDBAbstractStorage(object):
 
     def __init__(self, *args, **kwargs):
-        connection = Connection(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
+        connection = MongoClient(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
         db = connection[settings["MONGODB_DB"]]
         self.collection = db[settings["MONGODB_COLLECTION_REPORT_ABSTRACT"]]
    
@@ -23,7 +23,7 @@ class MongoDBAbstractStorage(object):
 class MongoDBFileStorage(object):
     
     def __init__(self, *args, **kwargs):
-        connection = Connection(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
+        connection = MongoClient(settings["MONGODB_SERVER"], settings["MONGODB_PORT"])
         db = connection[settings["MONGODB_DB"]]
         self.collection = db[settings["MONGODB_COLLECTION_REPORT_FILE"]]
         
