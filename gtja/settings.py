@@ -13,7 +13,7 @@ ITEM_PIPELINES = {
 }
 
 #FILES_STORE_PATH = r"G:/data/gtja/report/"
-FILES_STORE_PATH = r"/home/yy/Share/data/gtja/report"
+FILES_STORE_PATH = r"/home/yy/Share/data/gtja/report/"
 
 
 MONGODB_SERVER = "192.168.1.9"
